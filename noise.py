@@ -13,47 +13,31 @@ from math import cos, pi
 
 MAX_TIMESTEPS = 100
 
-'''
-BETA: THE NOISE SCHEDULE
-
-In the noise process equation, beta essentially determines how much to noise
-the image at a particular timestep, t. Higher beta is more noise.
-
-For example, what you can do is to noise it slowly at first, and then increase
-it later on.
-
-Beta is finally used in the calculation of alpha and alpha bar, which is directly
-used in the equation to change how much the image gets noised.
-'''
-def beta(t):
-    return t/MAX_TIMESTEPS
-
 
 '''
 ALPHA BAR
 
-Variable directly used in the equation to change how much the image is noised.
+In the noise process equation, alpha essentially determines how much to noise
+the image at a particular timestep, t. Lower alpha bar is more noise/less original image
 
-Alpha bar is calculated through repeated multiplication of alpha without bar,
-which is just alpha in the function. 
+You can modify how alpha bar changes over time to change how quickly the image
+gets noisy over time; this is called the **noise schedule**. 
+
+In the original diffusion model paper, the researchers used a simple linear
+noise schedule. However, the schedule quickly made the image noise up
+even before we reached max timesteps.
+
+Instead, of a linear schedule, this code uses a cosine schedule based on
+Nichol and Dhariwal's work at OpenAI (https://arxiv.org/abs/2102.09672)
+
+You can see tests between linear vs cosine schedule at 
+https://hackmd.io/@BaconErie/HygnRs6G0 (might be a bit complicated)
 '''
 def alpha_bar(t):
-    return alpha_bar_linear(t)
-
     f_t = cos( ((t/MAX_TIMESTEPS + 0.008)/(1+0.008))  * (pi/2) ) ** 2
     f_0 = cos( ((0.008)/(1+0.008))  * (pi/2) ) ** 2
 
     return f_t/f_0
-
-def alpha_bar_linear(t):
-    product = 1
-
-    for x in range (1, t):
-        alpha = 1 - beta(x)
-
-        product *= alpha
-
-    return product
 
 
 '''
@@ -110,36 +94,6 @@ def noise_runner():
     noised_display_image = to_display(noised_image)
 
     display(noised_display_image)
-
-# Prints mean and variance of pixel values in the image. Pixel values range from -1 to 1
-def variance_and_mean_test():
-    image_name = 'number.jpg'
-
-    print('timestep,mean,variance')
-
-    for timestep in range (0, 101):
-        image = cv.imread(image_name, cv.IMREAD_GRAYSCALE)
-        normalized_image = normalize(image)
-        noised_image = noise(normalized_image, timestep)
-        print(f'{timestep},{mean(noised_image)},{var(noised_image)}')
-
-def schedule_test():
-    for timestep in range (0, MAX_TIMESTEPS+1, int(MAX_TIMESTEPS/10)):
-        print('what)')
-        image = cv.imread('seven.png', cv.IMREAD_GRAYSCALE)
-
-        normalized_image = normalize(image)
-        noised_image = noise(normalized_image, timestep)
-
-        noised_display_image = to_display(noised_image)
-
-        cv.imwrite('linear-'+str(timestep/MAX_TIMESTEPS)+'.png', noised_display_image)
-
-def get_alpha_beta():
-    print('Timesteps (t/T),Linear,Cosine')
-    for timestep in range (0, MAX_TIMESTEPS+1):
-        print(f'{timestep/MAX_TIMESTEPS},{alpha_bar_linear(timestep)},{alpha_bar(timestep)}')
-
 
 # If this file is being run directly, start the noise_runner
 if __name__ == '__main__':
