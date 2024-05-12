@@ -31,7 +31,7 @@ Instead, of a linear schedule, this code uses a cosine schedule based on
 Nichol and Dhariwal's work at OpenAI (https://arxiv.org/abs/2102.09672)
 
 You can see tests between linear vs cosine schedule at 
-https://hackmd.io/@BaconErie/HygnRs6G0 (might be a bit complicated)
+https://hackmd.io/@BaconErie/lin-vs-cos-schedule (might be a bit complicated)
 '''
 def alpha_bar(t):
     f_t = cos( ((t/MAX_TIMESTEPS + 0.008)/(1+0.008))  * (pi/2) ) ** 2
