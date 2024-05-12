@@ -26,7 +26,7 @@ Beta is finally used in the calculation of alpha and alpha bar, which is directl
 used in the equation to change how much the image gets noised.
 '''
 def beta(t):
-    return 1 - cos( (t/MAX_TIMESTEPS) * (pi/2))**2
+    return t/MAX_TIMESTEPS
 
 
 '''
@@ -38,6 +38,14 @@ Alpha bar is calculated through repeated multiplication of alpha without bar,
 which is just alpha in the function. 
 '''
 def alpha_bar(t):
+    return alpha_bar_linear(t)
+
+    f_t = cos( ((t/MAX_TIMESTEPS + 0.008)/(1+0.008))  * (pi/2) ) ** 2
+    f_0 = cos( ((0.008)/(1+0.008))  * (pi/2) ) ** 2
+
+    return f_t/f_0
+
+def alpha_bar_linear(t):
     product = 1
 
     for x in range (1, t):
@@ -46,7 +54,6 @@ def alpha_bar(t):
         product *= alpha
 
     return product
-
 
 
 '''
@@ -116,10 +123,22 @@ def variance_and_mean_test():
         noised_image = noise(normalized_image, timestep)
         print(f'{timestep},{mean(noised_image)},{var(noised_image)}')
 
+def schedule_test():
+    for timestep in range (0, MAX_TIMESTEPS+1, int(MAX_TIMESTEPS/10)):
+        print('what)')
+        image = cv.imread('seven.png', cv.IMREAD_GRAYSCALE)
+
+        normalized_image = normalize(image)
+        noised_image = noise(normalized_image, timestep)
+
+        noised_display_image = to_display(noised_image)
+
+        cv.imwrite('linear-'+str(timestep/MAX_TIMESTEPS)+'.png', noised_display_image)
 
 def get_alpha_beta():
-    for timestep in range (0, 101):
-        print(f'{timestep},{beta(timestep)},{alpha_bar(timestep)}')
+    print('Timesteps (t/T),Linear,Cosine')
+    for timestep in range (0, MAX_TIMESTEPS+1):
+        print(f'{timestep/MAX_TIMESTEPS},{alpha_bar_linear(timestep)},{alpha_bar(timestep)}')
 
 
 # If this file is being run directly, start the noise_runner
