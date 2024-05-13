@@ -10,6 +10,8 @@ import numpy as np
 from numpy import sqrt, mean, var
 from helper import normalize, to_display, display, count_brightness
 from math import cos, pi
+from random import randint
+import imageio
 
 MAX_TIMESTEPS = 100
 
@@ -50,7 +52,8 @@ getting chosen.
 
 The matrix size is y by x, as defined in the function parameters.
 '''
-def epsilon(y, x):
+def epsilon(y, x, seed=None):
+    np.random.seed(seed)
     sample_matrix = np.random.normal(loc=0, scale=0.3, size=(y, x)).reshape(y, -1)
     
     return sample_matrix
@@ -65,11 +68,11 @@ This is the star of the show, and implements the main noising equation.
 Given a matrix (that represents an image) and timestep t, it will return a
 noised image that can then be used to train the denoiser.
 '''
-def noise(image, t):
+def noise(image, t, seed=None):
     num_rows = len(image)
     num_cols = len(image[0])
 
-    sample = epsilon(num_rows, num_cols)
+    sample = epsilon(num_rows, num_cols, seed=seed)
     result = sqrt(alpha_bar(t)) * image + sqrt(1 - alpha_bar(t)) * sample
 
     return np.clip(result, -1, 1)
@@ -94,6 +97,23 @@ def noise_runner():
     noised_display_image = to_display(noised_image)
 
     display(noised_display_image)
+
+def coolgif():
+    image_name = input('What is the name of the image file? (Include file extension): ')
+    output = input('What should the ouput gif be called?: ')
+    image = cv.imread(image_name, cv.IMREAD_GRAYSCALE)
+    normalized_image = normalize(image)
+
+    writer = imageio.get_writer(output, mode='I', fps=30, loop=0)
+    seed = randint(1,100)
+    for timestep in range(1, MAX_TIMESTEPS+1):
+        noised_image = noise(normalized_image, timestep, seed=seed)
+        noised_display_image = to_display(noised_image)
+
+        writer.append_data(noised_display_image)
+    
+    writer.close()
+
 
 # If this file is being run directly, start the noise_runner
 if __name__ == '__main__':
